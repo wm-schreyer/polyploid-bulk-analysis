@@ -1,0 +1,12 @@
+# Build ERCC index with HISAT2
+hisat2-build -f ERCC92.fa ercc_index
+
+# Run HISAT2
+sudo hisat2 -p 8 -x ercc_index -q INPUT_trimmo.fastq -S ercc_OUTPUT.mapped.sam -t
+
+# Convert to BAM and sort
+samtools view -S ercc_INPUT.mapped.sam -b -o ercc_OUTPUT.bam -@ 4
+
+samtools sort ercc_OUTPUT.bam -o ercc_OUTPUT.sorted.bam -@ 4
+
+sorted BAM >>> /iplant/home/jcoate/Arabidopsis/cytonuclear_RNAseq/BAM/C24
