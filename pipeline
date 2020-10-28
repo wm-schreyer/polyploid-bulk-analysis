@@ -1,0 +1,61 @@
+# Trimmomatic
+java -jar trimmomatic-0.39.jar SE -phred33 INPUT.fastq.gz OUTPUT_trimmo.fastq.gz ILLUMINACLIP:/home/wschreyer/scratch/trim/adapters/TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15
+
+TrimmomaticSE: Started with arguments:
+ -phred33 INPUT.fastq.gz OUTPUT.fastq.gz ILLUMINACLIP:/home/wschreyer/scratch/trim/adapters/TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15
+Automatically using 4 threads
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+ILLUMINACLIP: Using 0 prefix pairs, 2 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Input Reads: 13962374 Surviving: 13958530 (99.97%) Dropped: 3844 (0.03%)
+TrimmomaticSE: Completed successfully
+
+# FastQC
+
+# Build genome index
+hisat2-build -f Athaliana_447_TAIR10.fa Athaliana_index
+
+# Map with HISAT2
+hisat2 -p 8 -x Athaliana_index -q INPUT_trimmo.fastq -S OUTPUT_At447.mapped.sam -t
+
+# Convert to BAM and sort
+samtools view -S INPUT_At447.mapped.sam -b -o OUTPUT.bam -@ 4
+
+samtools sort INPUT.bam -o OUTPUT_sorted.bam -@ 4
+
+sorted BAM >>> /iplant/home/jcoate/Arabidopsis/cytonuclear_RNAseq/BAM
+
+# Assemble with StringTie
+stringtie INPUT_sorted.bam -p 8 -G Athaliana_447_Araport11.gene_exons.gff3 -o /scratch/gtf/OUTPUT.gtf
+
+# Check transcript summary with GffCompare
+gffcompare -T -r Athaliana_447_Araport11.gene_exons.gff3 -o /scratch/gffcompare_output/INPUT** OUTPUT.gtf
+
+**exclude .gtf suffix
+
+#= Summary for dataset: INPUT.gtf 
+#     Query mRNAs :   34917 in   20574 loci  (30325 multi-exon transcripts)
+#            (7642 multi-transcript loci, ~1.7 transcripts per locus)
+# Reference mRNAs :   47962 in   27172 loci  (41711 multi-exon)
+# Super-loci w/ reference transcripts:    19380
+#-----------------| Sensitivity | Precision  |
+        Base level:    77.1     |    98.2    |
+        Exon level:    72.3     |    93.7    |
+      Intron level:    75.0     |    97.0    |
+Intron chain level:    59.1     |    81.3    |
+  Transcript level:    60.4     |    83.0    |
+       Locus level:    67.3     |    88.2    |
+
+     Matching intron chains:   24641
+       Matching transcripts:   28979
+              Matching loci:   18285
+
+          Missed exons:   38029/185419	( 20.5%)
+           Novel exons:    1298/141663	(  0.9%)
+        Missed introns:   28412/131182	( 21.7%)
+         Novel introns:     967/101462	(  1.0%)
+           Missed loci:    7549/27172	( 27.8%)
+            Novel loci:     388/20574	(  1.9%)
+
+ Total union super-loci across all input datasets: 19768 
+34917 out of 34917 consensus transcripts written in /scratch/gffcompare_output/OUTPUT.annotated.gtf (0 discarded as redundant)
