@@ -7,7 +7,7 @@ Steps:
 2) FastQC -> Check quality of trimmed sequence data
 3) HISAT2 -> Align output .fastq files to indexed A. thaliana genome, convert to .sam format
 4) SAMtools -> Convert to .bam format, sort reads
-4) StringTie -> Assemble sorted reads into tentative gene transcripts for processing in R
+4) StringTie -> Assemble sorted reads into transcripts for processing in R
 
 Control Steps:
 1) Trim, check sequence quality
